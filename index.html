@@ -3,632 +3,533 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Pomodoro — Focus Studio</title>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<title>Focus Studio — Advanced Pomodoro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#071025; --card:#0e1724; --glass: rgba(255,255,255,0.04);
+    --bg:#071025; --card:#0e1724; --glass: rgba(255,255,255,0.03);
     --accent:#00D1FF; --accent-2:#FF6B6B; --muted:#9FB4C8;
-    --success:#4ade80; --glass-2: rgba(255,255,255,0.03);
     --radius:14px;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:
-    radial-gradient(1200px 600px at 10% 10%, rgba(0,209,255,0.06), transparent 8%),
-    radial-gradient(700px 400px at 90% 90%, rgba(255,107,107,0.03), transparent 6%),
-    var(--bg); font-family:Inter,system-ui,Segoe UI,Roboto,Arial; color:#e6f0ff;}
-  /* Hero background reference (your uploaded image path) */
-  .hero-bg {
-    position:fixed; inset:0; z-index:-1; opacity:0.06; background-size:cover; background-position:center;
-    /* If your hosting can serve the uploaded file, the URL below will show it as subtle texture */
-    background-image: url("/mnt/data/An_elite_cyber_202511222205 (1).jpeg");
-    filter: blur(8px) saturate(90%);
-  }
-
-  .app { max-width:1100px; margin:40px auto; padding:28px; display:grid; gap:20px;
-         grid-template-columns: 1fr 420px; align-items:start; }
-  @media (max-width:920px){ .app{grid-template-columns:1fr; padding:18px} }
-
-  /* Top bar */
-  .topbar{display:flex;justify-content:space-between;align-items:center; gap:16px}
+  body{margin:0;font-family:Inter,system-ui,Arial;background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(0,209,255,0.03), transparent 8%),
+    radial-gradient(700px 400px at 90% 90%, rgba(255,107,107,0.02), transparent 6%),
+    var(--bg); color:#e6f0ff; -webkit-font-smoothing:antialiased;}
+  .hero-bg { position:fixed; inset:0; z-index:-1; opacity:0.06; background-size:cover; background-position:center;
+    background-image: url("/mnt/data/An_elite_cyber_202511222205 (1).jpeg"); filter: blur(6px) saturate(80%); }
+  .container{max-width:1100px;margin:28px auto;padding:18px; display:grid; grid-template-columns:1fr 380px; gap:20px}
+  @media (max-width:960px){ .container{grid-template-columns:1fr;padding:12px} }
+  .topbar{display:flex;justify-content:space-between; align-items:center; margin-bottom:8px}
   .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:54px;height:54px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
-        display:flex;align-items:center;justify-content:center;font-weight:800;color:#041025;font-size:18px;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
-  .title{font-size:18px;font-weight:700}
-  .subtitle{color:var(--muted);font-size:13px;margin-top:2px}
-
-  .controls{display:flex;gap:8px;align-items:center}
-  .btn{background:linear-gradient(180deg,var(--card),#0c1520); padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03); cursor:pointer;
-       color:var(--accent); font-weight:600; box-shadow:0 6px 18px rgba(2,6,23,0.6)}
-  .ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03); font-weight:600}
-
-  /* Main card */
-  .card{background:linear-gradient(180deg,var(--card), #0b1220); padding:22px;border-radius:var(--radius); box-shadow: 0 10px 30px rgba(2,6,23,0.8); border:1px solid rgba(255,255,255,0.03)}
-  .timer-area{display:flex;gap:24px;align-items:center; flex-wrap:wrap; justify-content:center}
-  .ring-wrap{width:320px;height:320px;display:grid;place-items:center;position:relative}
-  @media (max-width:480px){ .ring-wrap{width:260px;height:260px} }
-
-  /* SVG ring */
-  .timer-value{position:absolute; text-align:center; display:flex;flex-direction:column;align-items:center; gap:8px}
-  .time{font-size:48px;font-weight:800; letter-spacing:1px}
-  @media (max-width:480px){ .time{font-size:40px} }
-  .session-label{color:var(--muted);font-weight:600}
-
-  /* Buttons row */
-  .actions{display:flex;gap:10px;justify-content:center;margin-top:12px}
-  .big{padding:12px 18px;border-radius:12px;font-weight:700}
-  .start{background:linear-gradient(90deg,var(--accent),#28b7ff); color:#031027}
-  .pause{background:linear-gradient(90deg,#ffb3b3,var(--accent-2)); color:#041025}
-
-  /* presets */
-  .presets{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
-  .chip{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.03); background:var(--glass); color:var(--muted); cursor:pointer}
-  .chip.active{background:linear-gradient(90deg,var(--accent),#28b7ff); color:#041025; font-weight:700; box-shadow:0 8px 24px rgba(0,209,255,0.06)}
-
-  /* Task list */
-  .task-wrap{margin-top:18px}
-  .task-head{display:flex;justify-content:space-between;align-items:center}
-  .task-list{margin-top:12px; display:flex;flex-direction:column; gap:10px; max-height:320px; overflow:auto; padding-right:6px}
-  .task{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:var(--glass-2);border:1px solid rgba(255,255,255,0.02)}
-  .task.done{opacity:0.6;text-decoration:line-through}
-  .task .meta{font-size:13px;color:var(--muted);margin-left:auto}
-
-  input[type="text"], input[type="number"]{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03); background:transparent;color:inherit; outline:none}
-  .add-row{display:flex;gap:8px;margin-top:12px}
-
-  /* Right column */
-  .rightcol{display:flex;flex-direction:column;gap:20px; min-width:300px}
-  .stats{display:flex;gap:12px;flex-direction:column}
-  .stat-grid{display:flex;gap:12px;align-items:center; justify-content:space-between}
-  .stat-card{flex:1;padding:12px;border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); text-align:center}
-  .stat-num{font-weight:800;font-size:22px}
-  .streak{color:var(--accent-2); font-weight:800}
-  .chart{height:90px; display:flex;align-items:end;gap:6px;padding:8px}
-
-  .bar{flex:1;border-radius:6px;background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.4)); display:flex;align-items:flex-end; justify-content:center}
-  .bar > div{width:100%; border-radius:6px}
-
-  footer{color:var(--muted); text-align:center; margin-top:18px; font-size:13px}
-
-  /* small helpers */
-  .small{font-size:13px;color:var(--muted)}
-  .muted{color:var(--muted)}
+  .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#031025;font-weight:800}
+  .title{font-weight:700}
+  .subtitle{color:var(--muted);font-size:13px}
+  .card{background:linear-gradient(180deg,var(--card),#0b1220); padding:20px;border-radius:var(--radius); box-shadow:0 10px 30px rgba(2,6,23,0.7); border:1px solid rgba(255,255,255,0.03)}
+  .timer-wrap{display:flex;gap:20px;align-items:center;flex-wrap:wrap; justify-content:center}
+  .ring{width:300px;height:300px;position:relative;display:grid;place-items:center}
+  @media (max-width:480px){ .ring{width:240px;height:240px} .time{font-size:38px} }
+  svg{transform:rotate(-90deg)}
+  .time{font-size:56px;font-weight:800;letter-spacing:1px}
+  .session{color:var(--muted);margin-top:6px}
+  .controls{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+  .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),#28b7ff);color:#031027}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  .presets{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .chip{padding:8px 12px;border-radius:999px;background:var(--glass);cursor:pointer;color:var(--muted)}
+  .chip.active{background:linear-gradient(90deg,var(--accent),#28b7ff); color:#031027; font-weight:800}
+  /* tasks */
+  .task-list{margin-top:12px;display:flex;flex-direction:column;gap:10px; max-height:340px;overflow:auto;padding-right:6px}
+  .task{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02)}
+  .task .title{font-weight:700}
+  .task .meta{margin-left:auto;color:var(--muted);font-size:13px}
+  .add-row{display:flex;gap:8px;margin-top:10px}
+  input, textarea {background:transparent;border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:8px;color:inherit}
+  .rightcol{display:flex;flex-direction:column;gap:16px}
+  .stat-grid{display:flex;gap:10px}
+  .stat{flex:1;padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));text-align:center}
+  .chart{display:flex;gap:6px;align-items:end;height:90px;margin-top:10px}
+  .bar{flex:1;border-radius:6px;background:linear-gradient(180deg, rgba(2,6,23,0.2), rgba(2,6,23,0.5));display:flex;align-items:flex-end;justify-content:center}
+  .small{color:var(--muted);font-size:13px}
+  footer{color:var(--muted);text-align:center;margin-top:14px}
   .kbd{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:6px;font-weight:700}
-  /* subtle glass hover */
-  .card:hover{transform:translateY(-2px); transition:transform .2s ease}
+  /* mobile tweaks */
+  @media (max-width:960px){ .rightcol{order:2} .card{padding:16px} }
 </style>
 </head>
 <body>
   <div class="hero-bg" aria-hidden="true"></div>
 
-  <div style="max-width:1200px;margin:18px auto;padding:8px 18px">
+  <div style="max-width:1100px;margin:16px auto;padding:12px">
     <div class="topbar">
       <div class="brand">
-        <div class="logo" aria-hidden="true">FS</div>
+        <div class="logo">FS</div>
         <div>
           <div class="title">Focus Studio</div>
-          <div class="subtitle">Premium Pomodoro — ship more, stress less</div>
+          <div class="subtitle">Advanced Pomodoro — beautiful, focused</div>
         </div>
       </div>
-
-      <div class="controls">
-        <div class="small muted">Shortcuts: <span class="kbd">Space</span> start/pause • <span class="kbd">R</span> reset • <span class="kbd">N</span> new task</div>
-        <button id="themeToggle" class="btn ghost" title="Toggle theme">Theme</button>
-        <button id="settingsBtn" class="btn">Settings</button>
-      </div>
+      <div class="small">Shortcuts: <span class="kbd">Space</span> start/pause • <span class="kbd">R</span> reset • <span class="kbd">N</span> new task</div>
     </div>
   </div>
 
-  <main class="app" role="main" aria-labelledby="app-heading">
-    <section class="card" aria-labelledby="timer-heading">
-      <h2 id="timer-heading" style="margin:0 0 8px 0">Pomodoro Timer</h2>
+  <main class="container" role="main">
+    <section class="card" aria-labelledby="timerHeading">
+      <h2 id="timerHeading" style="margin:0 0 12px 0">Pomodoro Timer</h2>
 
-      <div class="timer-area">
-        <div class="ring-wrap" role="region" aria-live="polite" aria-label="Pomodoro timer">
-          <!-- SVG circular progress -->
-          <svg id="progressRing" width="100%" height="100%" viewBox="0 0 100 100" style="transform:rotate(-90deg)">
+      <div class="timer-wrap">
+        <div class="ring" id="ringWrap" role="region" aria-live="polite" aria-label="Pomodoro timer">
+          <!-- SVG ring -->
+          <svg id="ringSvg" viewBox="0 0 100 100" width="100%" height="100%">
             <defs>
-              <linearGradient id="g1" x1="0%" x2="100%"><stop offset="0%" stop-color="#00D1FF"/><stop offset="100%" stop-color="#28b7ff"/></linearGradient>
-              <linearGradient id="g2" x1="0%" x2="100%"><stop offset="0%" stop-color="#FF6B6B"/><stop offset="100%" stop-color="#ff8e8e"/></linearGradient>
+              <linearGradient id="grad" x1="0" x2="1"><stop offset="0" stop-color="#00D1FF"/><stop offset="1" stop-color="#28b7ff"/></linearGradient>
+              <linearGradient id="grad2" x1="0" x2="1"><stop offset="0" stop-color="#FF6B6B"/><stop offset="1" stop-color="#ff8e8e"/></linearGradient>
             </defs>
-            <circle cx="50" cy="50" r="45" stroke="rgba(255,255,255,0.04)" stroke-width="10" fill="none"/>
-            <circle id="prog" cx="50" cy="50" r="45" stroke="url(#g1)" stroke-width="10" stroke-linecap="round" fill="none" stroke-dasharray="282.743" stroke-dashoffset="282.743"></circle>
+            <circle cx="50" cy="50" r="45" stroke="rgba(255,255,255,0.03)" stroke-width="10" fill="none"></circle>
+            <circle id="progress" cx="50" cy="50" r="45" stroke="url(#grad)" stroke-width="10" stroke-linecap="round" fill="none"
+                    stroke-dasharray="282.743" stroke-dashoffset="282.743"></circle>
           </svg>
 
-          <div class="timer-value">
-            <div class="time" id="timeDisplay">25:00</div>
-            <div class="session-label" id="sessionLabel">Work • Pomodoro 1 of 4</div>
+          <div style="position:absolute;text-align:center">
+            <div class="time" id="display">25:00</div>
+            <div class="session" id="sessionLabel">Work • Pomodoro 1 of 4</div>
 
-            <div class="actions" style="margin-top:16px">
-              <button id="startBtn" class="btn big start">Start</button>
-              <button id="pauseBtn" class="btn big pause" style="display:none">Pause</button>
-              <button id="resetBtn" class="btn big ghost">Reset</button>
+            <div class="controls">
+              <button id="start" class="btn primary">Start</button>
+              <button id="pause" class="btn ghost" style="display:none">Pause</button>
+              <button id="reset" class="btn ghost">Reset</button>
             </div>
 
-            <div class="presets" aria-hidden="false" style="margin-top:12px">
+            <div class="presets" style="margin-top:10px">
               <div class="chip" data-min="25">Work 25</div>
               <div class="chip" data-min="5">Short 5</div>
               <div class="chip" data-min="15">Long 15</div>
-              <div class="chip" id="customChip">Custom</div>
+              <div class="chip" id="custom">Custom</div>
             </div>
-
-            <div style="margin-top:10px" class="small muted">Volume: <span id="volLabel">80%</span></div>
-            <input id="vol" type="range" min="0" max="100" value="80" aria-label="Volume" style="width:160px;margin-top:8px">
+            <div style="margin-top:8px" class="small">Volume: <span id="volLabel">80%</span></div>
+            <input id="volume" type="range" min="0" max="100" value="80" style="width:160px;margin-top:6px">
           </div>
         </div>
 
-        <div style="flex:1;min-width:300px">
+        <div style="flex:1;min-width:280px">
           <h3 style="margin-top:0">Tasks</h3>
-          <div class="task-wrap card" style="padding:12px">
-            <div class="task-head">
-              <div class="small muted">Focus list</div>
-              <div class="small muted">Completed today: <span id="dailyCount">0</span></div>
+          <div class="task-area card" style="padding:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div class="small">Focus List</div>
+              <div class="small">Today: <strong id="todayCount">0</strong></div>
             </div>
 
-            <div class="add-row">
-              <input id="taskInput" type="text" placeholder="Add a task (press Enter)" aria-label="Add task">
-              <button id="addTaskBtn" class="btn">Add</button>
+            <div class="add-row" style="margin-top:10px">
+              <input id="newTask" placeholder="Add task and press Enter" aria-label="Add task">
+              <button id="addBtn" class="btn">Add</button>
             </div>
 
-            <div class="task-list" id="taskList" aria-live="polite" aria-label="Task list"></div>
+            <div class="task-list" id="tasks"></div>
           </div>
 
-          <div style="margin-top:12px" class="card small muted">
+          <div style="margin-top:12px" class="card small">
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><strong>Focus Mode</strong><div class="small muted">Hide distractions when running</div></div>
-              <label style="display:inline-flex;align-items:center;gap:8px">
-                <input id="focusToggle" type="checkbox">
-              </label>
+              <div><strong>Focus Mode</strong><div class="small">Hide right column while running</div></div>
+              <label><input type="checkbox" id="focusToggle"></label>
             </div>
           </div>
         </div>
       </div>
 
-      <footer class="small muted">Pro tip: press <span class="kbd">Space</span> to start/pause. Focus for 25 minutes, reward yourself with a break!</footer>
+      <footer class="small">Tip: Use <span class="kbd">Space</span> to start/pause. Focus for 25 minutes, reward with a break!</footer>
     </section>
 
     <aside class="rightcol">
-      <div class="card stats">
+      <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>Stats</strong><div class="small muted">Track your progress</div></div>
-          <div><button id="exportBtn" class="btn ghost">Export CSV</button></div>
+          <div><strong>Stats</strong><div class="small">Track progress</div></div>
+          <div><button id="export" class="btn ghost">Export CSV</button></div>
         </div>
 
-        <div class="stat-grid" style="margin-top:10px">
-          <div class="stat-card">
-            <div class="small muted">Today</div>
-            <div class="stat-num" id="todayNum">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="small muted">Streak</div>
-            <div class="stat-num streak" id="streakNum">0</div>
-          </div>
+        <div class="stat-grid" style="margin-top:12px">
+          <div class="stat"><div class="small">Today</div><div style="font-weight:800;font-size:20px" id="statToday">0</div></div>
+          <div class="stat"><div class="small">Streak</div><div style="font-weight:800;font-size:20px;color:var(--accent-2)" id="statStreak">0</div></div>
         </div>
 
-        <div style="margin-top:12px" class="small muted">Last 7 days</div>
-        <div class="chart" id="chart">
-          <!-- bars inserted by JS -->
-        </div>
+        <div style="margin-top:10px" class="small">Last 7 days</div>
+        <div class="chart" id="chart"></div>
       </div>
 
       <div class="card small">
         <strong>Settings</strong>
-        <div style="margin-top:10px" class="small muted">
-          <label>Work (minutes) <input id="workInput" type="number" min="5" max="90" value="25" style="width:90px;margin-left:8px"></label>
+        <div style="margin-top:10px" class="small">
+          <label>Work <input id="sWork" type="number" min="5" max="90" value="25" style="width:70px;margin-left:8px"></label>
         </div>
-        <div style="margin-top:8px" class="small muted">
-          <label>Short break <input id="shortInput" type="number" min="1" max="30" value="5" style="width:80px;margin-left:8px"></label>
+        <div style="margin-top:8px" class="small">
+          <label>Short <input id="sShort" type="number" min="1" max="30" value="5" style="width:70px;margin-left:8px"></label>
         </div>
-        <div style="margin-top:8px" class="small muted">
-          <label>Long break <input id="longInput" type="number" min="5" max="60" value="15" style="width:80px;margin-left:8px"></label>
+        <div style="margin-top:8px" class="small">
+          <label>Long <input id="sLong" type="number" min="5" max="60" value="15" style="width:70px;margin-left:8px"></label>
         </div>
-
         <div style="margin-top:12px;display:flex;gap:8px">
-          <button id="savePrefs" class="btn">Save</button>
-          <button id="resetData" class="btn ghost">Reset Data</button>
+          <button id="save" class="btn">Save</button>
+          <button id="clear" class="btn ghost">Reset Data</button>
         </div>
       </div>
     </aside>
   </main>
 
 <script>
-/* ======== Pomodoro App JS (single-file) ========
-   - Timer engine with circular progress SVG
-   - Tasks + stats in localStorage
-   - WebAudio sound effects (start, tick, break, end)
-   - Keyboard shortcuts: Space (start/pause), R (reset), N (focus new task)
-   - Accessible: ARIA labels & polite live regions
-   - Where to add Firebase: see TODO below
-===============================================*/
+/* ===== Advanced Pomodoro — fully functional ===== */
 
-/* ======= Utilities & State ======= */
-const state = {
-  work: 25, short: 5, long: 15, // minutes
-  mode: 'work', // work | short | long
-  totalSeconds: 25*60, remaining: 25*60,
-  running:false, timerInterval: null,
-  pomodoroCount: 0, // within cycle
-  cycleTarget: 4,
-  sessionsToday:0, streak:0, weekly: [0,0,0,0,0,0,0]
-};
+// State
+let prefs = {work:25, short:5, long:15};
+let mode = 'work'; // work|short|long
+let total = prefs.work*60;
+let remaining = total;
+let running = false;
+let timerId = null;
+let pomodoroCount = 0;
+const cycle = 4;
+let sessionsToday = 0;
+let streak = 0;
+let weekly = [0,0,0,0,0,0,0]; // Sun-Sat
 
-// DOM refs
-const timeDisplay = document.getElementById('timeDisplay');
+// DOM
+const display = document.getElementById('display');
 const sessionLabel = document.getElementById('sessionLabel');
-const startBtn = document.getElementById('startBtn');
-const pauseBtn = document.getElementById('pauseBtn');
-const resetBtn = document.getElementById('resetBtn');
-const prog = document.getElementById('prog');
+const progress = document.getElementById('progress');
+const startBtn = document.getElementById('start');
+const pauseBtn = document.getElementById('pause');
+const resetBtn = document.getElementById('reset');
 const chips = document.querySelectorAll('.chip');
-const volSlider = document.getElementById('vol');
-const volLabel = document.getElementById('volLabel');
-const taskInput = document.getElementById('taskInput');
-const addTaskBtn = document.getElementById('addTaskBtn');
-const taskList = document.getElementById('taskList');
-const dailyCountEl = document.getElementById('dailyCount');
-const todayNum = document.getElementById('todayNum');
-const streakNum = document.getElementById('streakNum');
-const chart = document.getElementById('chart');
+const newTask = document.getElementById('newTask');
+const addBtn = document.getElementById('addBtn');
+const tasksEl = document.getElementById('tasks');
+const todayCountEl = document.getElementById('todayCount');
+const statToday = document.getElementById('statToday');
+const statStreak = document.getElementById('statStreak');
+const chartEl = document.getElementById('chart');
 const focusToggle = document.getElementById('focusToggle');
-const exportBtn = document.getElementById('exportBtn');
+const rightCol = document.querySelector('.rightcol');
+const volume = document.getElementById('volume');
+const volLabel = document.getElementById('volLabel');
+const exportBtn = document.getElementById('export');
 
-const SAVENAME = 'pomodoro-v1';
-
-/* ======= WebAudio Sound Engine (no external audio files) ======= */
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
+// Audio (WebAudio)
 let audioCtx = null;
 let masterGain = null;
 function ensureAudio(){
-  if(!audioCtx){ audioCtx = new AudioCtx(); masterGain = audioCtx.createGain(); masterGain.gain.value = 0.8; masterGain.connect(audioCtx.destination);}
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain(); masterGain.gain.value = volume.value/100; masterGain.connect(audioCtx.destination);
+  }
 }
-function setVolume(pct){ ensureAudio(); masterGain.gain.value = (pct/100) }
-volSlider.addEventListener('input',()=>{volLabel.textContent = volSlider.value + '%'; setVolume(volSlider.value) });
-setVolume(volSlider.value);
+volume.addEventListener('input', ()=> {
+  volLabel.textContent = volume.value + '%';
+  if(masterGain) masterGain.gain.value = volume.value/100;
+});
+volLabel.textContent = volume.value + '%';
 
 // simple beep
-function beep(freq=880, dur=0.12, type='sine', ramp=false){
+function beep(f=880,d=0.08){
   ensureAudio();
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
-  o.type = type; o.frequency.value = freq;
-  g.gain.value = 0;
+  o.type = 'sine'; o.frequency.value = f;
   o.connect(g); g.connect(masterGain);
   const now = audioCtx.currentTime;
-  o.start(now);
+  g.gain.value = 0;
   g.gain.linearRampToValueAtTime(0.8, now + 0.01);
-  g.gain.linearRampToValueAtTime(0.001, now + dur + (ramp?0.1:0));
-  o.stop(now + dur + 0.12);
+  g.gain.linearRampToValueAtTime(0.001, now + d + 0.02);
+  o.start(now); o.stop(now + d + 0.03);
 }
-// soft chime (end)
-function chime(){ ensureAudio(); const o = audioCtx.createOscillator(); const f1=880,f2=1318; const g=audioCtx.createGain(); o.type='triangle'; o.frequency.value=f1; o.connect(g); g.connect(masterGain); g.gain.value=0; const n=audioCtx.currentTime; o.start(n); g.gain.linearRampToValueAtTime(0.6,n+0.02); o.frequency.exponentialRampToValueAtTime(f2,n+0.5); g.gain.linearRampToValueAtTime(0.0001,n+1.2); o.stop(n+1.3); }
+function chime(){
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type='triangle'; o.frequency.value=440; o.connect(g); g.connect(masterGain);
+  const n = audioCtx.currentTime;
+  g.gain.setValueAtTime(0, n);
+  g.gain.linearRampToValueAtTime(0.7, n+0.02);
+  o.frequency.exponentialRampToValueAtTime(880, n+0.6);
+  g.gain.linearRampToValueAtTime(0.001, n+1.2);
+  o.start(n); o.stop(n+1.3);
+}
 
-/* ======= Persistence ======= */
-function saveState(){
-  const payload = {
-    prefs:{work:state.work,short:state.short,long:state.long},
-    sessionsToday: state.sessionsToday, streak: state.streak, weekly: state.weekly,
-    tasks: getTasks()
-  };
-  localStorage.setItem(SAVENAME, JSON.stringify(payload));
+// Persistence
+const KEY = 'pomodoro_adv_v1';
+function saveAll(){
+  const payload = {prefs, sessionsToday, streak, weekly, tasks: getTasks()};
+  localStorage.setItem(KEY, JSON.stringify(payload));
 }
-function loadState(){
-  const raw = localStorage.getItem(SAVENAME);
+function loadAll(){
+  const raw = localStorage.getItem(KEY);
   if(!raw) return;
   try{
     const p = JSON.parse(raw);
-    state.work = p.prefs.work || state.work;
-    state.short = p.prefs.short || state.short;
-    state.long = p.prefs.long || state.long;
-    state.sessionsToday = p.sessionsToday || 0;
-    state.streak = p.streak || 0;
-    state.weekly = p.weekly || state.weekly;
-    if(p.tasks) loadTasks(p.tasks);
+    prefs = p.prefs || prefs;
+    sessionsToday = p.sessionsToday || 0;
+    streak = p.streak || 0;
+    weekly = p.weekly || weekly;
+    if(p.tasks) localStorage.setItem(KEY + '-tasks', JSON.stringify(p.tasks));
   }catch(e){}
 }
-loadState();
+loadAll();
 
-/* ======= Timer Engine ======= */
-function setMode(mode,minOverride){
-  state.mode = mode;
-  const mins = minOverride || (mode==='work'?state.work:(mode==='short'?state.short:state.long));
-  state.totalSeconds = mins*60;
-  state.remaining = state.totalSeconds;
-  updateTimeDisplay();
-  updateSessionLabel();
-  updateProgress(1);
-  highlightChip(mode,minOverride);
+// Timer functions
+function setMode(m, customMin){
+  mode = m;
+  const mins = customMin || (m==='work'?prefs.work:(m==='short'?prefs.short:prefs.long));
+  total = mins*60;
+  remaining = total;
+  updateDisplay();
+  updateLabel();
+  updateProgress(0);
+  highlightChips();
 }
-
-function highlightChip(mode,minOverride){
-  chips.forEach(c=>{
-    c.classList.remove('active');
-    const d = c.dataset.min;
-    if(mode==='work' && d==state.work) c.classList.add('active');
-    if(mode==='short' && d==state.short) c.classList.add('active');
-    if(mode==='long' && d==state.long) c.classList.add('active');
-    if(!d && c.id==='customChip' && minOverride) c.classList.add('active');
-  });
+function updateDisplay(){
+  const mm = String(Math.floor(remaining/60)).padStart(2,'0');
+  const ss = String(remaining%60).padStart(2,'0');
+  display.textContent = `${mm}:${ss}`;
 }
-
-function updateTimeDisplay(){
-  const m = Math.floor(state.remaining/60).toString().padStart(2,'0');
-  const s = Math.floor(state.remaining%60).toString().padStart(2,'0');
-  timeDisplay.textContent = `${m}:${s}`;
+function updateLabel(){
+  sessionLabel.textContent = `${capitalize(mode)} • Pomodoro ${Math.min(pomodoroCount+1, cycle)} of ${cycle}`;
 }
-
-function updateSessionLabel(){
-  sessionLabel.textContent = `${state.mode.charAt(0).toUpperCase()+state.mode.slice(1)} • Pomodoro ${Math.min(state.pomodoroCount+1, state.cycleTarget)} of ${state.cycleTarget}`;
-}
-
-function updateProgress(fraction){
+function updateProgress(){
   const circumference = 2*Math.PI*45;
-  const offset = circumference * (1 - fraction);
-  prog.style.strokeDashoffset = offset;
+  const pct = (total - remaining) / total;
+  const offset = circumference * (1 - pct);
+  progress.style.strokeDashoffset = offset;
 }
-
-// tick every second
 function tick(){
-  if(!state.running) return;
-  state.remaining--;
-  if(state.remaining<=0){
-    // session finished
-    endSession();
+  if(!running) return;
+  remaining--;
+  if(remaining<=0){
+    onSessionEnd();
     return;
   }
-  // periodic tick sound every minute (subtle)
-  if(state.remaining % 60 === 0) beep(880,0.05,'sine');
-  updateTimeDisplay();
-  const fraction = (state.totalSeconds - state.remaining)/state.totalSeconds;
-  updateProgress(fraction);
+  if(remaining % 60 === 0) beep(880,0.04);
+  updateDisplay();
+  updateProgress();
 }
 
-// start/pause/reset handlers
 function startTimer(){
-  if(!state.running){
-    // resume audio context on user interaction
-    if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
-    if(!audioCtx) ensureAudio();
-    state.running = true;
-    startBtn.style.display='none';
-    pauseBtn.style.display='inline-block';
-    state.timerInterval = setInterval(tick,1000);
-    beep(880,0.08,'sine');
-    // UI focus mode hide distractions
-    applyFocusMode(true);
-  }
+  if(!audioCtx) ensureAudio(); // resume on user gesture
+  if(running) return;
+  running = true;
+  startBtn.style.display='none';
+  pauseBtn.style.display='inline-block';
+  timerId = setInterval(tick,1000);
+  beep(880,0.06);
+  applyFocus(true);
 }
 function pauseTimer(){
-  if(state.running){
-    state.running=false;
-    clearInterval(state.timerInterval);
-    startBtn.style.display='inline-block';
-    pauseBtn.style.display='none';
-    beep(660,0.06,'sine');
-    applyFocusMode(false);
-  }
+  if(!running) return;
+  running = false;
+  clearInterval(timerId);
+  startBtn.style.display='inline-block';
+  pauseBtn.style.display='none';
+  beep(660,0.05);
+  applyFocus(false);
 }
 function resetTimer(){
   pauseTimer();
-  setMode(state.mode);
-  beep(700,0.06,'sine');
+  setMode('work');
+  pomodoroCount = 0;
+  updateAllUI();
+  beep(720,0.05);
 }
 
-startBtn.addEventListener('click',()=>{ startTimer(); });
-pauseBtn.addEventListener('click',()=>{ pauseTimer(); });
-resetBtn.addEventListener('click',()=>{ resetTimer(); });
-
-function endSession(){
+// session end
+function onSessionEnd(){
   pauseTimer();
-  // mark completion for work sessions only
-  if(state.mode==='work'){
-    state.pomodoroCount++;
-    state.sessionsToday++;
-    // update streak logic: simple: if sessionsToday>0 increment streak
-    state.streak = Math.max(state.streak, state.sessionsToday);
-    // increment weekly last slot (today index)
-    const idx = new Date().getDay(); // 0-6 Sun-Sat
-    state.weekly[idx] = (state.weekly[idx] || 0) + 1;
-    // assign completed work to top-most incomplete task
-    markOnePomodoroToTask();
-    saveState();
-  }
-  // sound and UI
   chime();
-  // if finished a work cycle, go to break
-  if(state.mode==='work'){
-    if(state.pomodoroCount % state.cycleTarget === 0){
+  if(mode==='work'){
+    pomodoroCount++;
+    sessionsToday++;
+    const day = new Date().getDay();
+    weekly[day] = (weekly[day]||0) + 1;
+    // assign to task
+    assignPomodoroToTask();
+    // update streak naive
+    streak = Math.max(streak, sessionsToday);
+    saveAll();
+    // after work -> break
+    if(pomodoroCount % cycle === 0){
       setMode('long');
     } else {
       setMode('short');
     }
   } else {
-    // finished break -> go to work
+    // break finished -> back to work
     setMode('work');
   }
-  updateAllDisplays();
-  // auto start next? optional — keep paused to let user start
+  updateAllUI();
 }
 
-/* ======= Preset chips behavior ======= */
+// helpers
+function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+function applyFocus(on){
+  if(focusToggle.checked || on){
+    rightCol.style.transition='opacity .25s'; rightCol.style.opacity = on? '0.06' : '1';
+  } else rightCol.style.opacity='1';
+}
+
+/* Presets */
 chips.forEach(c=>{
-  c.addEventListener('click', async ()=>{
-    const min = c.dataset.min;
-    if(min){
-      if(min==state.work) setMode('work');
-      else if(min==state.short) setMode('short');
-      else if(min==state.long) setMode('long');
-      else setMode('work');
-    } else if(c.id==='customChip'){
-      const custom = prompt('Enter custom minutes (1-180):');
-      const n = parseInt(custom);
-      if(n>0 && n<=180){ setMode('work', n); }
+  c.addEventListener('click',()=>{
+    const m = c.dataset.min;
+    if(m) setMode( m==prefs.work ? 'work' : (m==prefs.short ? 'short' : 'long') );
+    else {
+      const val = prompt('Custom minutes (1-180):');
+      const n = parseInt(val);
+      if(n>0 && n<=180) setMode('work', n);
     }
   });
 });
-
-/* ======= Task list (localStorage-backed) ======= */
-function getTasks(){
-  const raw = localStorage.getItem(SAVENAME + '-tasks');
-  if(!raw) return [];
-  try{ return JSON.parse(raw); }catch(e){ return []; }
-}
-function saveTasks(tasks){
-  localStorage.setItem(SAVENAME + '-tasks', JSON.stringify(tasks));
-  saveState();
-}
-function loadTasks(tasks){
-  saveTasks(tasks);
-  renderTasks();
-}
-function addTask(title){
-  if(!title) return;
-  const tasks = getTasks();
-  tasks.unshift({id:Date.now().toString(), title, createdAt: Date.now(), completedPomodoros:0, done:false});
-  saveTasks(tasks);
-  renderTasks();
-}
-function toggleTaskDone(id){
-  const tasks = getTasks().map(t=> t.id===id ? {...t, done: !t.done} : t);
-  saveTasks(tasks); renderTasks();
-}
-function incTaskPomodoros(id){
-  const tasks = getTasks().map(t=> t.id===id ? {...t, completedPomodoros: (t.completedPomodoros||0)+1 } : t);
-  saveTasks(tasks); renderTasks();
-}
-function markOnePomodoroToTask(){
-  const tasks = getTasks();
-  // find first non-done task
-  const idx = tasks.findIndex(t=> !t.done);
-  if(idx>=0){
-    tasks[idx].completedPomodoros = (tasks[idx].completedPomodoros||0)+1;
-    saveTasks(tasks);
-  }
-}
-function deleteTask(id){
-  const tasks = getTasks().filter(t=> t.id!==id);
-  saveTasks(tasks); renderTasks();
-}
-function renderTasks(){
-  const tasks = getTasks();
-  taskList.innerHTML = '';
-  tasks.forEach(t=>{
-    const el = document.createElement('div');
-    el.className = 'task ' + (t.done?'done':'');
-    el.innerHTML = `
-      <input type="checkbox" ${t.done?'checked':''} aria-label="Complete task">
-      <div style="font-weight:700">${escapeHtml(t.title)}</div>
-      <div class="meta">${t.completedPomodoros||0} pomodoro</div>
-      <div style="margin-left:8px;display:flex;gap:8px;align-items:center">
-        <button data-id="${t.id}" class="inc btn ghost" title="Mark one pomodoro">+</button>
-        <button data-id="${t.id}" class="del btn ghost" title="Delete">🗑</button>
-      </div>
-    `;
-    const chk = el.querySelector('input[type="checkbox"]');
-    chk.addEventListener('change', ()=> toggleTaskDone(t.id));
-    el.querySelector('.inc').addEventListener('click', (e)=> { incTaskPomodoros(e.target.dataset.id); });
-    el.querySelector('.del').addEventListener('click', (e)=> { deleteTask(e.target.dataset.id); });
-    taskList.appendChild(el);
+function highlightChips(){
+  chips.forEach(c=>{
+    c.classList.remove('active');
+    if(c.dataset.min == prefs.work && mode==='work') c.classList.add('active');
+    if(c.dataset.min == prefs.short && mode==='short') c.classList.add('active');
+    if(c.dataset.min == prefs.long && mode==='long') c.classList.add('active');
+    if(c.id==='custom' && mode==='work' && total !== prefs.work*60) c.classList.add('active');
   });
 }
 
-/* ======= UI Updates & Chart ======= */
-function updateAllDisplays(){
-  dailyCountEl.textContent = state.sessionsToday;
-  todayNum.textContent = state.sessionsToday;
-  streakNum.textContent = state.streak;
-  // chart: last 7 days align Sun-Sat
-  chart.innerHTML = '';
-  const max = Math.max(...state.weekly,1);
-  for(let i=0;i<7;i++){
-    const val = state.weekly[i] || 0;
-    const h = Math.round((val/max)*80);
-    const barOuter = document.createElement('div'); barOuter.className='bar';
-    const inner = document.createElement('div'); inner.style.height = h + 'px';
-    inner.style.background = `linear-gradient(180deg, ${val? 'var(--accent)' : 'rgba(255,255,255,0.02)'} , ${val? 'var(--accent-2)' : 'rgba(255,255,255,0.01)'})`;
-    barOuter.appendChild(inner); chart.appendChild(barOuter);
-  }
+/* Tasks */
+function getTasks(){ const raw = localStorage.getItem(KEY + '-tasks'); if(!raw) return []; try{return JSON.parse(raw);}catch{ return []; } }
+function saveTasks(list){ localStorage.setItem(KEY + '-tasks', JSON.stringify(list)); saveAll(); renderTasks(); }
+function addTask(title){
+  if(!title) return;
+  const t = getTasks();
+  t.unshift({id:Date.now().toString(),title,created:Date.now(),pomodoros:0,done:false});
+  saveTasks(t);
 }
-
-/* ======= Export CSV ======= */
-exportBtn?.addEventListener('click', ()=>{
+function toggleTaskDone(id){
+  const t = getTasks().map(x=> x.id===id ? {...x,done:!x.done} : x);
+  saveTasks(t);
+}
+function incTaskPom(id){
+  const t = getTasks().map(x=> x.id===id ? {...x,pomodoros:(x.pomodoros||0)+1} : x);
+  saveTasks(t);
+}
+function delTask(id){
+  const t = getTasks().filter(x=> x.id!==id); saveTasks(t);
+}
+function assignPomodoroToTask(){
   const tasks = getTasks();
-  let csv = 'id,title,completedPomodoros,done,createdAt\\n';
-  tasks.forEach(t=> csv += `${t.id},"${t.title.replace(/"/g,'""')}",${t.completedPomodoros||0},${t.done},${new Date(t.createdAt).toISOString()}\\n`);
-  const blob = new Blob([csv], {type: 'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'pomodoro_tasks.csv'; a.click();
-  URL.revokeObjectURL(url);
-});
-
-/* ======= Small helpers ======= */
-function escapeHtml(unsafe){ return unsafe.replace(/[&<"']/g, function(m){ return {'&':'&amp;','<':'&lt;','"':'&quot;',\"'\":\"&#039;\"}[m]; }); }
-
-/* ======= Keyboard shortcuts ======= */
-document.addEventListener('keydown', (e)=>{
-  if(e.code === 'Space'){ e.preventDefault(); state.running? pauseTimer() : startTimer(); }
-  if(e.key.toLowerCase()==='r'){ resetTimer(); }
-  if(e.key.toLowerCase()==='n'){ taskInput.focus(); }
-});
-
-/* ======= Task input handlers ======= */
-addTaskBtn.addEventListener('click', ()=>{ addTask(taskInput.value.trim()); taskInput.value=''; });
-taskInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ addTask(taskInput.value.trim()); taskInput.value=''; } });
-
-/* ======= Settings save/reset ======= */
-document.getElementById('savePrefs').addEventListener('click', ()=>{
-  const w = parseInt(document.getElementById('workInput').value) || 25;
-  const s = parseInt(document.getElementById('shortInput').value) || 5;
-  const l = parseInt(document.getElementById('longInput').value) || 15;
-  state.work = w; state.short=s; state.long=l;
-  setMode('work');
-  saveState();
-  alert('Preferences saved');
-});
-document.getElementById('resetData').addEventListener('click', ()=>{
-  if(confirm('Reset all saved data?')){ localStorage.removeItem(SAVENAME); localStorage.removeItem(SAVENAME + '-tasks'); location.reload(); }
-});
-
-/* ======= Focus mode (UI hide) ======= */
-function applyFocusMode(on){
-  if(focusToggle.checked || on){
-    document.querySelectorAll('aside, .topbar .controls, .card.small').forEach(el=> el.style.opacity = on? '0.06' : '1');
+  const idx = tasks.findIndex(x=> !x.done);
+  if(idx>=0){
+    tasks[idx].pomodoros = (tasks[idx].pomodoros||0)+1;
+    saveTasks(tasks);
   } else {
-    document.querySelectorAll('aside, .topbar .controls, .card.small').forEach(el=> el.style.opacity = '1');
+    // no task: just save stats
+    saveAll();
   }
 }
-focusToggle.addEventListener('change', ()=> applyFocusMode(false));
+function renderTasks(){
+  const list = getTasks();
+  tasksEl.innerHTML = '';
+  list.forEach(t=>{
+    const el = document.createElement('div'); el.className='task';
+    el.innerHTML = `
+      <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="done">
+      <div class="title">${escapeHtml(t.title)}</div>
+      <div class="meta">${t.pomodoros||0} pomodoro</div>
+      <div style="margin-left:8px;display:flex;gap:8px">
+        <button data-id="${t.id}" class="inc btn ghost">+1</button>
+        <button data-id="${t.id}" class="del btn ghost">🗑</button>
+      </div>
+    `;
+    el.querySelector('input[type="checkbox"]').addEventListener('change', ()=> toggleTaskDone(t.id));
+    el.querySelector('.inc').addEventListener('click', (e)=> incTaskPom(e.target.dataset.id));
+    el.querySelector('.del').addEventListener('click', (e)=> delTask(e.target.dataset.id));
+    tasksEl.appendChild(el);
+  });
+}
 
-/* ======= Theme toggle (very simple) ======= */
-document.getElementById('themeToggle').addEventListener('click', ()=>{
-  document.documentElement.style.setProperty('--bg', getComputedStyle(document.documentElement).getPropertyValue('--bg') === '#071025' ? '#f7f9fb' : '#071025');
-  document.documentElement.style.setProperty('--card', getComputedStyle(document.documentElement).getPropertyValue('--card') === '#0e1724' ? '#ffffff' : '#0e1724');
-  // more theme toggles could be added; keep minimal here
+/* Chart & Stats */
+function renderChart(){
+  chartEl.innerHTML = '';
+  const max = Math.max(...weekly,1);
+  for(let i=0;i<7;i++){
+    const val = weekly[i] || 0;
+    const h = Math.round((val / max) * 80);
+    const outer = document.createElement('div'); outer.className='bar';
+    const inner = document.createElement('div');
+    inner.style.width='100%'; inner.style.height = h + 'px';
+    inner.style.background = val ? 'linear-gradient(180deg,var(--accent),var(--accent-2))' : 'rgba(255,255,255,0.02)';
+    outer.appendChild(inner); chartEl.appendChild(outer);
+  }
+}
+function updateAllUI(){
+  todayCountEl.textContent = sessionsToday;
+  statToday.textContent = sessionsToday;
+  statStreak.textContent = streak;
+  renderChart();
+  renderTasks();
+  updateLabel();
+  updateDisplay();
+  highlightChips();
+}
+
+/* Helpers */
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+
+/* Keyboard shortcuts */
+document.addEventListener('keydown', (e)=>{
+  if(e.code==='Space'){ e.preventDefault(); running ? pauseTimer() : startTimer(); }
+  if(e.key==='r' || e.key==='R'){ resetTimer(); }
+  if(e.key==='n' || e.key==='N'){ newTask.focus(); }
 });
 
-/* ======= Initialize app ======= */
+/* UI events */
+startBtn.addEventListener('click', ()=> { startTimer(); });
+pauseBtn.addEventListener('click', ()=> { pauseTimer(); });
+resetBtn.addEventListener('click', ()=> { resetTimer(); });
+addBtn.addEventListener('click', ()=> { addTask(newTask.value.trim()); newTask.value=''; newTask.focus(); });
+newTask.addEventListener('keydown', (e)=> { if(e.key==='Enter'){ addTask(newTask.value.trim()); newTask.value=''; }});
+document.getElementById('save').addEventListener('click', ()=>{
+  prefs.work = parseInt(document.getElementById('sWork').value) || prefs.work;
+  prefs.short = parseInt(document.getElementById('sShort').value) || prefs.short;
+  prefs.long = parseInt(document.getElementById('sLong').value) || prefs.long;
+  setMode('work'); saveAll(); alert('Saved');
+});
+document.getElementById('clear').addEventListener('click', ()=>{
+  if(confirm('Reset all data?')){ localStorage.removeItem(KEY); localStorage.removeItem(KEY + '-tasks'); location.reload(); }
+});
+focusToggle.addEventListener('change', ()=> applyFocus(false));
+exportBtn.addEventListener('click', ()=> {
+  const rows = getTasks().map(t=> `${t.id},"${t.title.replace(/"/g,'""')}",${t.pomodoros||0},${t.done},${new Date(t.created).toISOString()}`).join('\n');
+  const csv = 'id,title,pomodoros,done,created\n' + rows;
+  const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'pomodoro_tasks.csv'; a.click(); URL.revokeObjectURL(url);
+});
+
+/* Init */
 function init(){
-  // apply prefs to inputs
-  document.getElementById('workInput').value = state.work;
-  document.getElementById('shortInput').value = state.short;
-  document.getElementById('longInput').value = state.long;
-  // start in work mode
+  // apply prefs to settings
+  document.getElementById('sWork').value = prefs.work;
+  document.getElementById('sShort').value = prefs.short;
+  document.getElementById('sLong').value = prefs.long;
   setMode('work');
+  // load tasks and stats
+  const loaded = localStorage.getItem(KEY);
+  if(loaded) {
+    try{
+      const p = JSON.parse(loaded);
+      sessionsToday = p.sessionsToday || sessionsToday;
+      streak = p.streak || streak;
+      weekly = p.weekly || weekly;
+    }catch{}
+  }
   renderTasks();
-  updateAllDisplays();
+  updateAllUI();
 }
 init();
 
-/* ======= CSV Import/Export + small UI ======= */
-// if you want to add Firebase integration, do it here:
-// TODO: Add firebaseConfig.js, initializeApp, auth state, then sync tasks and sessions to Firestore.
-// Example: on session end -> write to /users/{uid}/sessions a document with startAt/endAt/type, and update /users/{uid} stats.
+/* Save periodically and on unload */
+setInterval(saveAll, 5000);
+window.addEventListener('beforeunload', ()=> saveAll());
 
-/* ======= Small accessibility improvements ======= */
-// focus outline for keyboard users
-document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Tab') document.body.classList.add('show-focus');
-});
 </script>
 </body>
 </html>
